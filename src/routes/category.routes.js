@@ -1,0 +1,10 @@
+import {Router} from "express";
+import { createCategory, deleteCategory, getCategories, updateCategory } from "../controllers/category.controllers.js";
+import validateObjectId from "../middlewares/validateObjectId.js";
+import { asyncHandle } from "../middlewares/asyncHandler.js";
+const router=Router();
+router.get('/',asyncHandle(getCategories));
+router.put('/:id',validateObjectId('id'),updateCategory);
+router.post("/",asyncHandle(createCategory));
+router.delete("/:id",validateObjectId('id'),deleteCategory);
+export default router;
