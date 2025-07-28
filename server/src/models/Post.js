@@ -7,5 +7,6 @@ const postSchema = new Schema({
     ref: "Category",
     required: false,
   },
+  image:String
 });
 export default model("Post", postSchema);

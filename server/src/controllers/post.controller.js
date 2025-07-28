@@ -1,6 +1,6 @@
 import Post from "../models/Post.js";
 export const getAllPosts = async (req, res) => {
-  const posts = await Post.find().sort({ createdAt: -1 });
+  const posts = await Post.find().populate('category','name');
   res.json(posts);
 };
 
@@ -10,18 +10,19 @@ export const getPostById = async (req, res) => {
   res.json(post);
 };
 export const createPost = async (req, res) => {
-  const { title, content } = req.body;
+  const { title, content,category } = req.body;
   if (!title || !content) {
     return res.status(400).json({ message: "all fields are required" });
   }
-  const post = await Post.create({ title, content });
+  const post = await Post.create({ title, content ,category});
   res.json(post);
 };
 export const updatePost = async (req, res) => {
-  const { title, content } = req.body;
+  const { title, content,category } = req.body;
   const post = await Post.findByIdAndUpdate(req.params.id, {
     title,
     content,
+    category,
   });
   if (!post) {
     return res.status(400).json({ message: "Post not found with id" });
