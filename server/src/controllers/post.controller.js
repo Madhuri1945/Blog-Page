@@ -1,29 +1,58 @@
 import Post from "../models/Post.js";
-export const getAllPosts = async (req, res) => {
-  const posts = await Post.find()
-    .populate("category", "name")
-    .populate("likes", "username")
-    .populate("comments", "username")
-    .sort({ createdAt: -1 });
-  const formattedPosts = posts.map((post) => ({
-    _id: post._id,
-    title: post.title,
-    content: post.content,
-    category: post.category?.name || null,
-    imageUrl: post.image
-      ? `${req.protocol}://${req.get("host")}/uploads/${post.image}`
-      : null,
-    likesCount: post.likes.length,
-    likedBy: post.likes.map((user) => user.username),
-    comments: post.comments.map((comment) => ({
-      username: comment.username,
-      text: comment.text,
-      createdAt: comment.createdAt,
-    })),
-  }));
-  res.json(formattedPosts);
-};
+// export const getAllPosts = async (req, res) => {
+//   const posts = await Post.find()
+//     .populate("category", "name")
+//     .populate("likes", "username")
+//     .populate("comments", "username")
+//     .sort({ createdAt: -1 });
+//   const formattedPosts = posts.map((post) => ({
+//     _id: post._id,
+//     title: post.title,
+//     content: post.content,
+//     category: post.category?.name || null,
+//     imageUrl: post.image
+//       ? `${req.protocol}://${req.get("host")}/uploads/${post.image}`
+//       : null,
+//     likesCount: post.likes.length,
+//     likedBy: post.likes.map((user) => user.username),
+//     comments: post.comments.map((comment) => ({
+//       username: comment.username,
+//       text: comment.text,
+//       createdAt: comment.createdAt,
+//     })),
+//   }));
+//   res.json(formattedPosts);
+// };
 
+
+export const getAllPosts=async(req,res)=>{
+  const {page=1,limit=5,sort='createdAt',category,search}=req.query;
+  const filter={}
+  if(category){
+    filter.category=category;
+  }
+  if(search){
+    filter.$or=[
+      {title:{$regex:search,$options:'i'}},
+      {content:{$regex:search,$options:'i'}}
+    ]
+  }
+  const posts=await Post.find(filter).
+      populate('category','name')
+      .populate('likes','username')
+      .populate('comments.user','username')
+      .sort({[sort]:-1})
+      .skip((page-1)*limit)
+      .limit(parseInt(limit));
+
+      const totalPosts=await Post.countDocuments(filter);
+      res.status(200).json({
+        currentPage:Number(page),
+        totalPages:Math.ceil(totalPosts/limit),
+        totalPosts,
+        posts
+      })
+}
 export const getPostById = async (req, res) => {
   const post = await Post.findById(req.params.id)
     .populate("category", "name")
@@ -75,14 +104,14 @@ export const updatePost = async (req, res) => {
   }
   res.json(post);
 };
-export const deletePost = async (req, res) => {
-  const post = await Post.findByIdAndDelete(req.params.id);
-  if (!post)
-    res
-      .status(404)
-      .json({ message: `Post not found with id ${req.params.id}` });
-  res.json({ message: "Post deleted" });
-};
+// export const deletePost = async (req, res) => {
+//   const post = await Post.findByIdAndDelete(req.params.id);
+//   if (!post)
+//     res
+//       .status(404)
+//       .json({ message: `Post not found with id ${req.params.id}` });
+//   res.json({ message: "Post deleted" });
+// };
 export const likePost = async (req, res) => {
   const postId = req.params.id;
   const userId = req.user.id;

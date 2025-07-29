@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   addComment,
   createPost,
-  deletePost,
+ 
   getAllPosts,
   getPostById,
   likePost,
@@ -13,7 +13,7 @@ import validateObjectId from "../middlewares/validateObjectId.js";
 import { verifyToken, isAdmin } from "../middlewares/authMiddleware.js";
 import upload from "../middlewares/multer.js";
 const router = Router();
-router.get("/", verifyToken, asyncHandle(getAllPosts));
+router.get("/", asyncHandle(getAllPosts));
 router.get("/:id", validateObjectId("id"), asyncHandle(getPostById));
 router.post("/", verifyToken, upload.single("image"), createPost);
 router.post("/", verifyToken, isAdmin, asyncHandle(createPost));
@@ -24,13 +24,13 @@ router.put(
   validateObjectId("id"),
   asyncHandle(updatePost)
 );
-router.delete(
-  "/:id",
-  verifyToken,
-  isAdmin,
-  validateObjectId("id"),
-  asyncHandle(deletePost)
-);
+// router.delete(
+//   "/:id",
+//   verifyToken,
+//   isAdmin,
+//   validateObjectId("id"),
+//   asyncHandle(deletePost)
+// );
 router.post(
   "/:id/like",
   validateObjectId("id"),

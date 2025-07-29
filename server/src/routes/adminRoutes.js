@@ -1,0 +1,10 @@
+import { Router } from "express";
+import { getAllUsers,deleteAnyPost,deleteUser } from "../controllers/adminController.js";
+import { asyncHandle } from "../middlewares/asyncHandler.js";
+import validateObjectId from "../middlewares/validateObjectId.js";
+import { verifyToken,isAdmin } from "../middlewares/authMiddleware.js";
+const router=Router();
+router.get("/",verifyToken,isAdmin,asyncHandle(getAllUsers));
+router.delete("/post/:id",verifyToken,isAdmin,validateObjectId('id'),asyncHandle(deleteAnyPost));
+router.delete("/user/:id",verifyToken,isAdmin,validateObjectId('id'),asyncHandle(deleteUser));
+export default router;
