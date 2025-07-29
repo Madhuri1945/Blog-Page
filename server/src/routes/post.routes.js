@@ -1,17 +1,41 @@
 import { Router } from "express";
 import {
+  addComment,
   createPost,
   deletePost,
   getAllPosts,
   getPostById,
+  likePost,
   updatePost,
 } from "../controllers/post.controller.js";
 import { asyncHandle } from "../middlewares/asyncHandler.js";
 import validateObjectId from "../middlewares/validateObjectId.js";
+import { verifyToken, isAdmin } from "../middlewares/authMiddleware.js";
+import upload from "../middlewares/multer.js";
 const router = Router();
-router.get("/", asyncHandle(getAllPosts));
+router.get("/", verifyToken, asyncHandle(getAllPosts));
 router.get("/:id", validateObjectId("id"), asyncHandle(getPostById));
-router.post("/", asyncHandle(createPost));
-router.put("/:id", validateObjectId("id"), asyncHandle(updatePost));
-router.delete("/:id", validateObjectId("id"), asyncHandle(deletePost));
+router.post("/", verifyToken, upload.single("image"), createPost);
+router.post("/", verifyToken, isAdmin, asyncHandle(createPost));
+router.put(
+  "/:id",
+  verifyToken,
+  isAdmin,
+  validateObjectId("id"),
+  asyncHandle(updatePost)
+);
+router.delete(
+  "/:id",
+  verifyToken,
+  isAdmin,
+  validateObjectId("id"),
+  asyncHandle(deletePost)
+);
+router.post(
+  "/:id/like",
+  validateObjectId("id"),
+  verifyToken,
+  asyncHandle(likePost)
+);
+router.post("/comment/:id", verifyToken, addComment);
 export default router;
