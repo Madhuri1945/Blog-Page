@@ -7,7 +7,11 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
 import RegisterForm from "./pages/auth/RegisterForm";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import LoginForm from "./pages/auth/LoginForm";
+import SingleBlog from "./pages/SingleBlog";
+
 const App = () => {
   return (
     <div>
@@ -15,7 +19,7 @@ const App = () => {
       <div className="max-w-6xl mx-auto px-2">
         <Routes>
           <Route path="/" element={<Home />} />
-          {/* <Route path="/blog/:id" element={<BlogDetails />} /> */}
+          <Route path="/blog/:id" element={<SingleBlog />} />
           <Route path="/login" element={<LoginForm />} />
           <Route path="/register" element={<RegisterForm />} />
           {/* <Route path="/create" element={<CreatePost />} /> */}
@@ -24,6 +28,7 @@ const App = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };

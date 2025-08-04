@@ -6,10 +6,11 @@ const postSchema = new Schema(
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
-     required: false,
+      required: false,
     },
     image: { type: String, default: null },
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     comments: [
       {
         user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

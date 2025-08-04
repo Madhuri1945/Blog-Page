@@ -2,7 +2,6 @@ import { Router } from "express";
 import {
   addComment,
   createPost,
- 
   getAllPosts,
   getPostById,
   likePost,
@@ -14,7 +13,12 @@ import { verifyToken, isAdmin } from "../middlewares/authMiddleware.js";
 import upload from "../middlewares/multer.js";
 const router = Router();
 router.get("/", asyncHandle(getAllPosts));
-router.get("/:id", validateObjectId("id"), asyncHandle(getPostById));
+router.get(
+  "/:id",
+  validateObjectId("id"),
+  verifyToken,
+  asyncHandle(getPostById)
+);
 router.post("/", verifyToken, upload.single("image"), createPost);
 router.post("/", verifyToken, isAdmin, asyncHandle(createPost));
 router.put(

@@ -1,4 +1,5 @@
 import Post from "../models/Post.js";
+import User from "../models/User.js";
 // export const getAllPosts = async (req, res) => {
 //   const posts = await Post.find()
 //     .populate("category", "name")
@@ -24,60 +25,90 @@ import Post from "../models/Post.js";
 //   res.json(formattedPosts);
 // };
 
-
-export const getAllPosts=async(req,res)=>{
-  const {page=1,limit=5,sort='createdAt',category,search}=req.query;
-  const filter={}
-  if(category){
-    filter.category=category;
+export const getAllPosts = async (req, res) => {
+  const {
+    page = 1,
+    limit = 5,
+    sort = "createdAt",
+    category,
+    search,
+  } = req.query;
+  const filter = {};
+  if (category) {
+    filter.category = category;
   }
-  if(search){
-    filter.$or=[
-      {title:{$regex:search,$options:'i'}},
-      {content:{$regex:search,$options:'i'}}
-    ]
+  if (search) {
+    filter.$or = [
+      { title: { $regex: search, $options: "i" } },
+      { content: { $regex: search, $options: "i" } },
+    ];
   }
-  const posts=await Post.find(filter).
-      populate('category','name')
-      .populate('likes','username')
-      .populate('comments.user','username')
-      .sort({[sort]:-1})
-      .skip((page-1)*limit)
-      .limit(parseInt(limit));
-
-      const totalPosts=await Post.countDocuments(filter);
-      res.status(200).json({
-        currentPage:Number(page),
-        totalPages:Math.ceil(totalPosts/limit),
-        totalPosts,
-        posts
-      })
-}
-export const getPostById = async (req, res) => {
-  const post = await Post.findById(req.params.id)
+  const posts = await Post.find(filter)
     .populate("category", "name")
     .populate("likes", "username")
-    .populate("comments", "username")
-    .sort({ createdAt: -1 });
-  const formattedPost = {
-    _id: post._id,
-    title: post.title,
-    content: post.content,
-    category: post.category?.name || null,
-    imageUrl: post.image
-      ? `${req.protocol}://${req.get("host")}/uploads/${post.image}`
-      : null,
-    likesCount: post.likes.length,
-    likedBy: post.likes.map((user) => user.username),
-    comments: post.comments.map((comment) => ({
-      username: comment.username,
-      text: comment.text,
-      createdAt: comment.createdAt,
-    })),
-  };
-  if (!post) return res.status(404).json({ message: "Post not found" });
-  res.json(formattedPost);
+    .populate("comments.user", "username")
+    .sort({ [sort]: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+
+  const totalPosts = await Post.countDocuments(filter);
+  res.status(200).json({
+    currentPage: Number(page),
+    totalPages: Math.ceil(totalPosts / limit),
+    totalPosts,
+    posts,
+  });
 };
+export const getPostById = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const post = await Post.findById(req.params.id)
+      .populate("category", "name")
+      .populate("likes", "username")
+      .populate("comments.user", "username") // fix for comment usernames
+      .sort({ createdAt: -1 });
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    const user = await User.findById(userId);
+
+    const likedByCurrentUser = post.likes.some(
+      (likeUser) => likeUser._id.toString() === userId
+    );
+
+    const isFavorite = user.favorites.some(
+      (favPostId) => favPostId.toString() === post._id.toString()
+    );
+
+    const formattedPost = {
+      _id: post._id,
+      title: post.title,
+      content: post.content,
+      category: post.category?.name || null,
+      imageUrl: post.image
+        ? `${req.protocol}://${req.get("host")}/uploads/${post.image}`
+        : null,
+      likesCount: post.likes.length,
+      likedBy: post.likes.map((user) => user.username),
+      likedByCurrentUser,
+      isFavorite,
+      comments: post.comments.map((comment) => ({
+        username: comment.user?.username || "Anonymous",
+        text: comment.text,
+        createdAt: comment.createdAt,
+      })),
+    };
+
+    res.json(formattedPost);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
 export const createPost = async (req, res) => {
   const { title, content, category } = req.body;
   const imagePath = req.file ? req.file.filename : null;
@@ -115,21 +146,29 @@ export const updatePost = async (req, res) => {
 export const likePost = async (req, res) => {
   const postId = req.params.id;
   const userId = req.user.id;
-  console.log(userId);
+
   const post = await Post.findById(postId);
   if (!post) return res.status(404).json({ message: "Post not found" });
+
   const liked = post.likes.includes(userId);
   if (liked) {
     post.likes.pull(userId);
   } else {
     post.likes.push(userId);
   }
+
   await post.save();
+
+  // Re-fetch the post to ensure updated state
+  const updatedPost = await Post.findById(postId);
+
   res.status(200).json({
     message: liked ? "Post unliked" : "Post liked",
-    likesCount: post.likes.length,
+    likesCount: updatedPost.likes.length,
+    likedByCurrentUser: updatedPost.likes.includes(userId),
   });
 };
+
 export const addComment = async (req, res) => {
   const postId = req.params.id;
   const { text } = req.body;

@@ -22,7 +22,11 @@ export const register = async (req, res) => {
     password: hashedPassword,
     role,
   });
-  res.status(201).json({ message: "User created" });
+  const token = jwt.sign({ id: user._id, role: user.role }, secret, {
+    expiresIn: "1d",
+  });
+
+  res.json({ token, role: user.role });
 };
 
 export const login = async (req, res) => {
