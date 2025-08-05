@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
       setUser(res.data);
     } catch (err) {
       console.log(err);
-      showError("Failed to load user profile");
+
       setLoggedIn(false);
       setUser(null);
       localStorage.removeItem("token");

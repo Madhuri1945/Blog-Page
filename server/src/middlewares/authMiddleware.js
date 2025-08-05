@@ -16,6 +16,23 @@ export const verifyToken = (req, res, next) => {
     res.status(401).json({ message: "Invalid token" });
   }
 };
+export const optionalAuth = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    try {
+      const token = authHeader.split(" ")[1];
+      console.log(token);
+      const decoded = jwt.verify(token, process.env.SECRET_KEY);
+      console.log(decoded);
+      req.user = await User.findById(decoded.id).select("-password");
+      console.log(req.user);
+    } catch (err) {
+      req.user = null;
+    }
+  }
+  next();
+};
 
 export const isAdmin = (req, res, next) => {
   if (req.user.role !== "admin") {

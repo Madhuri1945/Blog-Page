@@ -27,7 +27,7 @@ const SingleBlog = () => {
           },
         });
         const { likesCount, likedByCurrentUser, isFavorite } = res.data;
-        console.log(isFavorite);
+        console.log(res);
         setBlog(res.data);
         setLikesCount(likesCount);
         setIsLiked(likedByCurrentUser);

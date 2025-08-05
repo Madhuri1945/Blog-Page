@@ -14,7 +14,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
 // Mock AuthContext for demo
 
 const Navbar = () => {
@@ -23,7 +23,7 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { loggedIn, logout, user } = useAuth();
   const profileRef = useRef(null);
-
+  const navigate = useNavigate();
   // Close profile dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -62,6 +62,9 @@ const Navbar = () => {
 
     if (action === "logout") {
       logout();
+    }
+    if (action == "favorites") {
+      navigate("/favorites");
     }
     // Handle other actions (profile, settings, favorites, etc.)
   };

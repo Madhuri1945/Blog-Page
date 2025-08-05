@@ -1,14 +1,20 @@
 import { useState, useEffect } from "react";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { PostCard } from "../components/PostCard";
+import { useAuth } from "../utils/AuthContext";
 import axios from "axios";
 const Home = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const { getToken } = useAuth();
   useEffect(() => {
+    const token = getToken();
     axios
-      .get("http://localhost:4000/api/posts")
+      .get("http://localhost:4000/api/posts", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then((res) => {
         console.log("API response:", res.data.posts);
         setPosts(res.data.posts);

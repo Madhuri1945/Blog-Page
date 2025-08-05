@@ -11,6 +11,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoginForm from "./pages/auth/LoginForm";
 import SingleBlog from "./pages/SingleBlog";
+import Favorites from "./pages/Favorites";
 
 const App = () => {
   return (
@@ -22,6 +23,7 @@ const App = () => {
           <Route path="/blog/:id" element={<SingleBlog />} />
           <Route path="/login" element={<LoginForm />} />
           <Route path="/register" element={<RegisterForm />} />
+          <Route path="/favorites" element={<Favorites />} />
           {/* <Route path="/create" element={<CreatePost />} /> */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/unauthorized" element={<Unauthorized />} />

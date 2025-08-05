@@ -19,5 +19,5 @@ router.put(
 );
 router.get("/profile", verifyToken, getProfile);
 router.post("/favorites/:id", verifyToken, favoriteBlogs);
-router.get("/favorites", validateObjectId("id"), verifyToken, getFavoriteBlogs);
+router.get("/favorites", verifyToken, getFavoriteBlogs);
 export default router;

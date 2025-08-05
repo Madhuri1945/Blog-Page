@@ -26,6 +26,7 @@ import User from "../models/User.js";
 // };
 
 export const getAllPosts = async (req, res) => {
+  console.log(req.user);
   const {
     page = 1,
     limit = 5,
@@ -33,6 +34,7 @@ export const getAllPosts = async (req, res) => {
     category,
     search,
   } = req.query;
+
   const filter = {};
   if (category) {
     filter.category = category;
@@ -43,22 +45,40 @@ export const getAllPosts = async (req, res) => {
       { content: { $regex: search, $options: "i" } },
     ];
   }
+
   const posts = await Post.find(filter)
     .populate("category", "name")
     .populate("likes", "username")
     .populate("comments.user", "username")
+    .populate("favorites", "username")
     .sort({ [sort]: -1 })
     .skip((page - 1) * limit)
     .limit(parseInt(limit));
 
   const totalPosts = await Post.countDocuments(filter);
+
+  // Add isFavorite field for each post
+  const userId = req.user?.id;
+  console.log(userId);
+  const postsWithFavorite = posts.map((post) => {
+    const isFavorite = userId
+      ? post.favorites.some((user) => user._id.toString() === userId)
+      : false;
+
+    return {
+      ...post.toObject(),
+      isFavorite,
+    };
+  });
+
   res.status(200).json({
     currentPage: Number(page),
     totalPages: Math.ceil(totalPosts / limit),
     totalPosts,
-    posts,
+    posts: postsWithFavorite,
   });
 };
+
 export const getPostById = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -66,7 +86,8 @@ export const getPostById = async (req, res) => {
     const post = await Post.findById(req.params.id)
       .populate("category", "name")
       .populate("likes", "username")
-      .populate("comments.user", "username") // fix for comment usernames
+      .populate("comments.user", "username")
+      .populate("favorites", "username")
       .sort({ createdAt: -1 });
 
     if (!post) {
@@ -95,6 +116,7 @@ export const getPostById = async (req, res) => {
       likedBy: post.likes.map((user) => user.username),
       likedByCurrentUser,
       isFavorite,
+      favoritedBy: post.favorites.map((user) => user.username),
       comments: post.comments.map((comment) => ({
         username: comment.user?.username || "Anonymous",
         text: comment.text,

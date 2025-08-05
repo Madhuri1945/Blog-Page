@@ -11,8 +11,9 @@ import { asyncHandle } from "../middlewares/asyncHandler.js";
 import validateObjectId from "../middlewares/validateObjectId.js";
 import { verifyToken, isAdmin } from "../middlewares/authMiddleware.js";
 import upload from "../middlewares/multer.js";
+import { optionalAuth } from "../middlewares/authMiddleware.js";
 const router = Router();
-router.get("/", asyncHandle(getAllPosts));
+router.get("/", optionalAuth, asyncHandle(getAllPosts));
 router.get(
   "/:id",
   validateObjectId("id"),
