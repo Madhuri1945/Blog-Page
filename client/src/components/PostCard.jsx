@@ -10,11 +10,12 @@ import { useEffect } from "react";
 export const PostCard = ({ post }) => {
   const { loggedIn, getToken } = useAuth();
   const navigate = useNavigate();
-  const [isFavorited, setIsFavorited] = useState(post.isFavorite || false);
+  const [isFavorited, setIsFavorited] = useState(post.isFavoritedByUser || false);
   useEffect(() => {
-    console.log(post.isFavorite);
-    setIsFavorited(post.isFavorite || false);
-  }, [post.isFavorite]);
+    console.log(post);
+    console.log(post.isFavoritedByUser);
+    setIsFavorited(post.isFavoritedByUser || false);
+  }, [post.isFavoritedByUser]);
   const handleReadMore = () => {
     if (loggedIn) {
       navigate(`/blog/${post._id}`);

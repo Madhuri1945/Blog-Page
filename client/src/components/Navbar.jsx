@@ -66,6 +66,9 @@ const Navbar = () => {
     if (action == "favorites") {
       navigate("/favorites");
     }
+    if(action=="profile"){
+      navigate("/profile");
+    }
     // Handle other actions (profile, settings, favorites, etc.)
   };
 

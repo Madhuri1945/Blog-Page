@@ -1,5 +1,5 @@
 import User from "../models/User.js";
-
+import Post from "../models/Post.js";
 export const updateProfile = async (req, res) => {
   const userId = req.user.id;
   const { username, email } = req.body;
@@ -27,15 +27,17 @@ export const favoriteBlogs = async (req, res) => {
     const userId = req.user.id;
     const user = await User.findById(userId);
     const postId = req.params.id;
-
+    const post=await Post.findById(postId);
     const alreadyFav = user.favorites.some(
       (favId) => favId.toString() === postId
     );
 
     if (alreadyFav) {
       user.favorites.pull(postId);
+      post.favorites.pull(postId);
     } else {
       user.favorites.push(postId);
+      post.favorites.push(postId);
     }
 
     await user.save();

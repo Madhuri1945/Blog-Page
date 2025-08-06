@@ -12,7 +12,8 @@ import "react-toastify/dist/ReactToastify.css";
 import LoginForm from "./pages/auth/LoginForm";
 import SingleBlog from "./pages/SingleBlog";
 import Favorites from "./pages/Favorites";
-
+import UserProfile from "./pages/UserProfile";
+import { User } from "lucide-react";
 const App = () => {
   return (
     <div>
@@ -25,6 +26,7 @@ const App = () => {
           <Route path="/register" element={<RegisterForm />} />
           <Route path="/favorites" element={<Favorites />} />
           {/* <Route path="/create" element={<CreatePost />} /> */}
+          <Route path="/profile" element={<UserProfile/>}/>
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="*" element={<NotFound />} />

@@ -1,10 +1,12 @@
 import Post from "../models/Post.js";
 import User from "../models/User.js";
 // export const getAllPosts = async (req, res) => {
+//   const userId=req.user.id;
 //   const posts = await Post.find()
 //     .populate("category", "name")
 //     .populate("likes", "username")
 //     .populate("comments", "username")
+//     .populate("favorites","username")
 //     .sort({ createdAt: -1 });
 //   const formattedPosts = posts.map((post) => ({
 //     _id: post._id,
@@ -15,6 +17,7 @@ import User from "../models/User.js";
 //       ? `${req.protocol}://${req.get("host")}/uploads/${post.image}`
 //       : null,
 //     likesCount: post.likes.length,
+//     Favorites:
 //     likedBy: post.likes.map((user) => user.username),
 //     comments: post.comments.map((comment) => ({
 //       username: comment.username,
@@ -25,58 +28,103 @@ import User from "../models/User.js";
 //   res.json(formattedPosts);
 // };
 
+// export const getAllPosts = async (req, res) => {
+//   console.log(req.user);
+//   const {
+//     page = 1,
+//     limit = 5,
+//     sort = "createdAt",
+//     category,
+//     search,
+//   } = req.query;
+
+//   const filter = {};
+//   if (category) {
+//     filter.category = category;
+//   }
+//   if (search) {
+//     filter.$or = [
+//       { title: { $regex: search, $options: "i" } },
+//       { content: { $regex: search, $options: "i" } },
+//     ];
+//   }
+
+//   const posts = await Post.find(filter)
+//     .populate("category", "name")
+//     .populate("likes", "username")
+//     .populate("comments.user", "username")
+//     .populate("favorites", "username")
+//     .sort({ [sort]: -1 })
+//     .skip((page - 1) * limit)
+//     .limit(parseInt(limit));
+
+//   const totalPosts = await Post.countDocuments(filter);
+
+//   // Add isFavorite field for each post
+//   const userId = req.user?.id;
+//   console.log(userId);
+//   const postsWithFavorite = posts.map((post) => {
+//     const isFavorite = userId
+//       ? post.favorites.some((user) => user._id.toString() === userId)
+//       : false;
+
+//     return {
+//       ...post.toObject(),
+//       isFavorite,
+//     };
+//   });
+
+//   res.status(200).json({
+//     currentPage: Number(page),
+//     totalPages: Math.ceil(totalPosts / limit),
+//     totalPosts,
+//     posts: postsWithFavorite,
+//   });
+// };
 export const getAllPosts = async (req, res) => {
-  console.log(req.user);
-  const {
-    page = 1,
-    limit = 5,
-    sort = "createdAt",
-    category,
-    search,
-  } = req.query;
+  try {
+    const userId = req.user?.id;
 
-  const filter = {};
-  if (category) {
-    filter.category = category;
+    const posts = await Post.find()
+      .populate("category", "name")
+      .populate("likes", "username")
+      .populate({
+        path: "comments",
+        populate: { path: "user", select: "username" }, // assuming comment has `user`
+      })
+      .populate("favorites", "username")
+      .sort({ createdAt: -1 });
+
+    const formattedPosts = posts.map((post) => {
+      const isFavorited = userId
+        ? post.favorites.some((user) => user._id.toString() === userId)
+        : false;
+
+      return {
+        _id: post._id,
+        title: post.title,
+        content: post.content,
+        category: post.category?.name || null,
+        imageUrl: post.image
+          ? `${req.protocol}://${req.get("host")}/uploads/${post.image}`
+          : null,
+        likesCount: post.likes.length,
+        likedBy: post.likes.map((user) => user.username),
+        favoritesCount: post.favorites.length,
+        isFavoritedByUser: isFavorited,
+        comments: post.comments.map((comment) => ({
+          username: comment.username || comment.user?.username || "Anonymous",
+          text: comment.text,
+          createdAt: comment.createdAt,
+        })),
+      };
+    });
+
+    res.json(formattedPosts);
+  } catch (error) {
+    console.error("Error fetching posts:", error.message);
+    res.status(500).json({ message: "Failed to fetch posts" });
   }
-  if (search) {
-    filter.$or = [
-      { title: { $regex: search, $options: "i" } },
-      { content: { $regex: search, $options: "i" } },
-    ];
-  }
-
-  const posts = await Post.find(filter)
-    .populate("category", "name")
-    .populate("likes", "username")
-    .populate("comments.user", "username")
-    .populate("favorites", "username")
-    .sort({ [sort]: -1 })
-    .skip((page - 1) * limit)
-    .limit(parseInt(limit));
-
-  const totalPosts = await Post.countDocuments(filter);
-
-  // Add isFavorite field for each post
-  const userId = req.user?.id;
-  console.log(userId);
-  const postsWithFavorite = posts.map((post) => {
-    const isFavorite = userId
-      ? post.favorites.some((user) => user._id.toString() === userId)
-      : false;
-
-    return {
-      ...post.toObject(),
-      isFavorite,
-    };
-  });
-
-  res.status(200).json({
-    currentPage: Number(page),
-    totalPages: Math.ceil(totalPosts / limit),
-    totalPosts,
-    posts: postsWithFavorite,
-  });
 };
 
 export const getPostById = async (req, res) => {

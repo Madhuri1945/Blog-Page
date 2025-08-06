@@ -16,8 +16,8 @@ const Home = () => {
         },
       })
       .then((res) => {
-        console.log("API response:", res.data.posts);
-        setPosts(res.data.posts);
+        console.log("API response:", res.data);
+        setPosts(res.data);
         setLoading(false);
       })
       .catch((err) => {

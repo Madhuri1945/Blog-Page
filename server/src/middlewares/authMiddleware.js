@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
+import User from "../models/User.js";
 const secret = process.env.SECRET_KEY;
 
 export const verifyToken = (req, res, next) => {
@@ -17,21 +18,17 @@ export const verifyToken = (req, res, next) => {
   }
 };
 export const optionalAuth = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
+  const token = req.headers.authorization?.split(" ")[1];
 
-  if (authHeader && authHeader.startsWith("Bearer ")) {
+  if (token) {
     try {
-      const token = authHeader.split(" ")[1];
-      console.log(token);
-      const decoded = jwt.verify(token, process.env.SECRET_KEY);
-      console.log(decoded);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = await User.findById(decoded.id).select("-password");
-      console.log(req.user);
     } catch (err) {
-      req.user = null;
+      console.warn("Invalid token, continuing without auth.");
     }
   }
-  next();
+  next(); // Continue either way
 };
 
 export const isAdmin = (req, res, next) => {
